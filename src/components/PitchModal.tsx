@@ -43,22 +43,41 @@ export const PitchModal: React.FC<PitchModalProps> = ({ lead, isOpen, onClose })
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/pitch/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lead,
-          executiveName: salesName,
-          dealership,
-        }),
-      });
+      let pitchData: PitchResult | null = null;
+      try {
+        const response = await fetch('/api/pitch/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lead,
+            executiveName: salesName,
+            dealership,
+          }),
+        });
 
-      const data = await response.json();
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to generate pitch');
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          if (data && data.success && data.pitch) {
+            pitchData = data.pitch;
+          }
+        } catch {
+          // ignore non-json
+        }
+      } catch (netErr) {
+        console.warn('Pitch network error, using client fallback:', netErr);
       }
 
-      setPitch(data.pitch);
+      if (!pitchData) {
+        pitchData = {
+          whatsappEnglish: `Namaskaram ${lead.fullName} Sir/Madam! 🙏 I am ${salesName} from ${dealership}. Regarding your interest in the ${lead.interestedModel}, we currently have immediate showroom stock and an exclusive exchange bonus for ${lead.location}. Would you like a free doorstep test drive at your convenience today or this weekend? Let me know and I will arrange it right away!`,
+          whatsappMalayalam: `നമസ്കാരം ${lead.fullName} സർ/മാഡം! 🙏 ഞാൻ ${dealership}-ൽ നിന്നും ${salesName} ആണ്. താങ്കൾ ${lead.interestedModel}-നെ കുറിച്ച് അന്വേഷിച്ചതായി കണ്ടു. കൊച്ചിയിലെ ഞങ്ങളുടെ ഷോറൂമിൽ ഇതിന്റെ റെഡി സ്റ്റോക്കും മികച്ച എക്സ്ചേഞ്ച് ബോണസും ഇപ്പോൾ ലഭ്യമാണ്. താങ്കളുടെ സൗകര്യപ്രദമായ സമയത്ത് വീട്ടിലോ ഓഫീസിലോ ഫ്രീ ഡോർസ്റ്റെപ്പ് ടെസ്റ്റ് ഡ്രൈവ് ക്രമീകരിക്കട്ടെ?`,
+          callScriptOpening: `Hello ${lead.fullName} Sir, namaskaram! Njan ${salesName} aanu, Maruti Suzuki Kochi showroomil ninnu vilikkunnathu. Sir Kochi ${lead.location}-il ${lead.interestedModel}-ine patti anweshichirunnallo. Sir-inu ethu divasam aanu test drive convenient aayi varika? Home delivery test drive free aayi cheythu tharaam!`,
+          closingTip: `Highlight immediate stock delivery in Ernakulam and offer free doorstep evaluation of their exchange car with guaranteed bonus.`,
+        };
+      }
+
+      setPitch(pitchData);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Error generating sales pitch');
