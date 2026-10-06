@@ -1,0 +1,6 @@
+{
+  "name": "Kochi Maruti Sales Pro - Lead Radar & Car Buyer Hub",
+  "description": "Sales accelerator and multi-platform car buyer lead radar for Maruti Suzuki executives in Kochi, Kerala. Sourced leads, direct phone and WhatsApp contact, AI sales pitches, and doorstep test-drive booking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
